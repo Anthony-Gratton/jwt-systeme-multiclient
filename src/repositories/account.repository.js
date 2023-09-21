@@ -23,7 +23,13 @@ class AccountRepository {
     }
 
     generateJWT() {
+        const accessToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_LIFE, issuer: process.env.BASE_URL });
 
+        const refreshToken = jwt.sign({ email }, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_LIFE, issuer: process.env.BASE_URL });
+
+
+
+        return { accessToken, refreshToken };
     }
 
     //verify password with argon
@@ -40,11 +46,24 @@ class AccountRepository {
         try {
             account.uuid = uuidv4();
             account.passwordHash = await argon2d.hash(account.password)
-            delete account.password;
             return Account.create(account);
         } catch (err) {
             throw err;
         }
+    }
+
+    retrieveById(idAccount) {
+        return Account.findById(idAccount);
+    }
+
+    transform(account, trandformOptions = {}) {
+
+        account.href = `${process.env.BASE_URL}/accounts/${account._id}`
+        delete account._id;
+        delete account.__v;
+        delete account.passwordHash;
+        delete account.password;
+        return account;
     }
 }
 
